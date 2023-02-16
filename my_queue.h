@@ -56,6 +56,7 @@ class QueueWithLock : public BaseQueue {
     std::lock_guard<std::mutex> lk(mutex_);
     return BaseQueue::is_empty();
   }
+  std::mutex& get_mutex() { return mutex_; }
 
  private:
   std::mutex mutex_;

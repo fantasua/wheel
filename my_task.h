@@ -2,9 +2,9 @@
 
 #pragma once
 
-struct Task { // 1st version , only support funcs with no return and no arguments
- public:
-  Task() = default;
-  ~Task() = default;
+// 1st version , only support funcs with no return and no
+// arguments
+struct Task {
+  Task(std::function<void(void)> task) : task_(task) {}
   std::function<void(void)> task_;
 };
