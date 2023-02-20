@@ -20,6 +20,7 @@ struct BaseQueue {
   }
   virtual bool push_back(std::shared_ptr<Task> task) { queue_.push(task); }
   virtual bool is_empty() { return queue_.empty(); }
+  virtual int size() { return queue_.size(); }
 
  private:
   std::queue<std::shared_ptr<Task>> queue_;
@@ -36,6 +37,7 @@ class QueueWithoutLock : public BaseQueue {
     return BaseQueue::push_back(task);
   }
   bool is_empty() { return BaseQueue::is_empty(); }
+  virtual int size() { return BaseQueue::size(); }
 };
 
 class QueueWithLock : public BaseQueue {
@@ -52,9 +54,13 @@ class QueueWithLock : public BaseQueue {
     std::lock_guard<std::mutex> lk(mutex_);
     return BaseQueue::push_back(task);
   }
-  bool is_empty() {
+  virtual bool is_empty() {
     std::lock_guard<std::mutex> lk(mutex_);
     return BaseQueue::is_empty();
+  }
+  virtual int size() {
+    std::lock_guard<std::mutex> lk(mutex_);
+    return BaseQueue::size();
   }
   std::mutex& get_mutex() { return mutex_; }
 

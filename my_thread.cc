@@ -34,3 +34,7 @@ void BaseThread::stop_thread() {
   running_ = false;
   cv_.notify_all();
 }
+
+MasterThread::MasterThread(int slave_num) : thread_num(slave_num) {
+
+}

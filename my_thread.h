@@ -2,9 +2,14 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <unordered_map>
 
 #include "my_queue.h"
 #include "my_task.h"
+
+#ifdef TEST
+#include <iostream>
+#endif
 
 #pragma once
 
@@ -25,12 +30,21 @@ class BaseThread {
     cv_.notify_one();
   }
 
+  int report_queue_load() {
+    std::lock_guard<std::mutex> lk(mutex_);
+#ifdef TEST
+    std::cout << "queue_len " << task_queue_.size() << std::endl;
+#endif
+    return task_queue_.size();
+    cv_.notify_all();
+  }
+
   void join() { thread_->join(); }
 
  protected:
   // what you do in one loop
   // it is the function that in the thread loop
-  void loop_func();
+  virtual void loop_func();
 
  private:
   // identify whether the thread is running
@@ -45,6 +59,41 @@ class BaseThread {
   QueueWithoutLock task_queue_;
 };
 
-class MasterThread : public BaseThread {};
+// serve as a task dispatcher
+// manage the thread pool and dispatch tasks from the task queue to other worker
+// slave threads
+class MasterThread : public BaseThread {
+ public:
+  MasterThread(int slave_num);
+  MasterThread(MasterThread &) = delete;
+  ~MasterThread();
 
-class SlaveThread : public BaseThread {};
+ public:
+  virtual void loop_func();
+
+
+ public:
+  void add_slave_thread(std::shared_ptr<std::thread> slave);
+  void delete_slave_thread(int slave_id);
+
+ public:
+  void add_task(std::shared_ptr<Task> task);
+
+ private:
+  void dispatch_task();
+  void monitor_task();
+
+ private:
+  int thread_num;
+  std::unordered_map<int, std::shared_ptr<std::thread>> slave_threads_;
+
+ private:
+  // monitor all the slave thread workload
+  std::shared_ptr<std::thread> slave_work_load_monitor_;
+  // the master thread uses thread_ from BaseThread to dispatch tasks to salves
+};
+
+// do the task that are dispatched to slave threads
+class SlaveThread : public BaseThread {
+ 
+};
