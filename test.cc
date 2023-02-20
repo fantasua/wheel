@@ -5,6 +5,7 @@
 #include "my_task.h"
 #include "my_thread.h"
 
+
 int main() {
   BaseThread b;
   std::shared_ptr<Task> task =
@@ -14,10 +15,16 @@ int main() {
   for (int i = 0; i < 100; ++i) {
     b.add_task(task);
   }
+  std::thread q = std::thread([&b]() {
+    while (1) {
+      b.report_queue_load();
+      sleep(1);
+    }
+  });
 
-  sleep(3);
-  b.stop_thread();
+  sleep(4);
   b.join();
+  q.join();
   
   return 0;
 }
